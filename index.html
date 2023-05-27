@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/svg+xml" href="/img/favicon.svg">
+    <script src="https://cdn.jsdelivr.net/npm/iconify-icon@1.0.7/dist/iconify-icon.min.js"></script>
+    <title>Video Room Example</title>
+  </head>
+
+  <body>
+    <div class="meeting-body">
+      <div class="meeting-container">
+        <div class="participant" id="local">
+          <video id="local-video" autoplay="autoplay" muted="muted"></video>
+        </div>
+      </div>
+    </div>
+    <div class="meeting-actions active">
+      <div class="icon" id="mute">
+        <iconify-icon icon="octicon:unmute-16"></iconify-icon>
+        <span>Mute</span>
+      </div>
+      <div class="icon" id="unpublish">
+        <iconify-icon icon="material-symbols:publish"></iconify-icon>
+        <span>Unpublish</span>
+      </div>
+      <div class="icon danger" id="destroy">
+        <iconify-icon icon="mdi:phone-hangup"></iconify-icon>
+        <span>Hangup</span>
+      </div>
+    </div>
+  </body>
+
+</html>
