@@ -94,23 +94,13 @@ class JanusUtil {
 	publishOwnFeed(payload) {
 		// Publish our stream
 		const { sfuVideoRoom, doDtx, vcodec, doSimulcast, doSvc, acodec } = this;
-		const { useAudio } = payload;
-		// We want sendonly audio and video (uncomment the data track
-		// too if you want to publish via datachannels as well)
-		let tracks = [];
-		if(useAudio)
-			tracks.push({ type: 'audio', capture: true, recv: false });
-		tracks.push({ type: 'video', capture: true, recv: false,
-			// We may need to enable simulcast or SVC on the video track
-			simulcast: doSimulcast,
-			// We only support SVC for VP9 and (still WIP) AV1
-			svc: ((vcodec === 'vp9' || vcodec === 'av1') && doSvc) ? doSvc : null
-		});
-		//~ tracks.push({ type: 'data' });
-	
+		const { useAudio, useVideo } = payload;
+
 		sfuVideoRoom.createOffer(
 			{
-				tracks: tracks,
+				// Add data:true here if you want to publish datachannels as well
+				media: { audioRecv: false, videoRecv: false,  audioSend: useAudio, videoSend: useVideo },
+				simulcast: doSimulcast,
 				customizeSdp: function(jsep) {
 					// If DTX is enabled, munge the SDP
 					if(doDtx) {
@@ -120,7 +110,7 @@ class JanusUtil {
 				},
 				success: function(jsep) {
 					Janus.debug("Got publisher SDP!", jsep);
-					let publish = { request: "configure", audio: useAudio, video: true };
+					let publish = { request: "configure", audio: useAudio, video: useVideo };
 					// You can force a specific codec to use when publishing by using the
 					// audiocodec and videocodec properties, for instance:
 					// 		publish["audiocodec"] = "opus"
@@ -266,9 +256,24 @@ class JanusUtil {
 						// The subscriber stream is recvonly, we don't expect anything here
 					},
 					onremotestream: function(stream) {
-						Janus.debug("Remote feed #" + remoteFeed.rfindex + ", stream:", stream);
-						console.log("Remote feed #" + remoteFeed.rfindex + ", stream:", stream);
-						if(document.querySelector(`.participant#rf-${remoteFeed.rfid}`)) return;
+						Janus.debug("Remote feed #" + remoteFeed.rfid + ", stream:", stream);
+						console.log("Remote feed #" + remoteFeed.rfid + ", stream:", stream);
+						//if the stream changes
+						if(document.querySelector(`.participant#rf-${remoteFeed.rfid}`)){
+							/**
+							 * we can use videoElement.srcObject instead of stream
+							 * let videoElement = document.querySelector(`.participant#rf-${remoteFeed.rfid} video`);
+							 */
+							if(stream.getVideoTracks().length === 0){
+								stream.addTrack(self.createDummyTrack());
+							}else{
+								let tracks = Object.values(stream.getVideoTracks());
+								//alternatively we can use track => track instanceof CanvasCaptureMediaStreamTrack
+								let canvasTrack = tracks.find(track => track.dummy);
+								if(canvasTrack) stream.removeTrack(canvasTrack);
+							}
+							return;
+						};
 
 						//TODO: Janus.webRTCAdapter.browserDetails.browser === "firefox" use setTimeout if firefox doesn't show res.
 
@@ -413,7 +418,63 @@ class JanusUtil {
 		publishEl
 		.querySelector("iconify-icon")
 		.setAttribute("icon", this.isOurStreamPublished ? "material-symbols:publish" : "material-symbols:unpublished");
-	}	
+	}
+
+	createDummyTrack(){
+		let width = 640;
+		let height = 480;
+		const canvas = document.createElement('canvas');
+		canvas.width = width;
+		canvas.height = height;
+	
+		const ctx = canvas.getContext('2d');
+		ctx.fillStyle = "black";
+		ctx.fillRect(0, 0, width, height);
+
+		const img = new Image();
+		img.src = '/img/wizard_cat.png'
+		img.onload = () => {
+			const maxWidth = width;
+			const maxHeight = height;
+			let ImgWidth = img.width;
+			let ImgHeight = img.height;
+	
+			if (width > maxWidth || height > maxHeight) {
+				const aspectRatio = width / height;
+	
+				if (ImgWidth > maxWidth) {
+					ImgWidth = maxWidth;
+					ImgHeight = ImgWidth / aspectRatio;
+				}
+				if (ImgHeight > maxHeight) {
+					ImgHeight = maxHeight;
+					ImgWidth = ImgHeight * aspectRatio;
+				}
+			}
+			ctx.drawImage(img, ((canvas.width / 2) - (ImgWidth / 2)), ((canvas.height / 2) - (ImgHeight / 2)), ImgWidth, ImgHeight);
+		}
+	
+		const stream = canvas.captureStream();
+		let track = stream.getVideoTracks()[0];
+		track.dummy = true;
+		return track;
+	}
+
+	mutateLocalStream(useVideo){
+		const self = this;
+		let localVideoEl = document.getElementById("local-video");
+		let videoTracks = Object.values(localVideoEl.srcObject.getVideoTracks());
+		videoTracks.forEach(videoTrack => localVideoEl.srcObject.removeTrack(videoTrack));
+
+		if(useVideo){
+			navigator.getUserMedia({ video: true }, (stream) => {
+				const [track] = stream.getVideoTracks();
+				localVideoEl.srcObject.addTrack(track);
+			});
+		} else {
+			localVideoEl.srcObject.addTrack(self.createDummyTrack());
+		}
+	}
 }
 
 export default JanusUtil;
