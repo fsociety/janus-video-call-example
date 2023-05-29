@@ -8,6 +8,7 @@ let currentUrl = new URL(window.location.href);
 let room = Number(currentUrl.searchParams.get("room"));
 let janus,sfuVideoRoom,myId,myStream,myPvtid;
 let feeds = [];
+let useCamera = true;
 let username = "user-"+Janus.randomString(12);
 const opaqueId = "videoroom-"+Janus.randomString(12);
 const doSimulcast = currentUrl.searchParams.get("simulcast");
@@ -119,7 +120,7 @@ function initializeJanus() {
                                 myPvtid = msg["private_id"];
                                 Janus.log("Successfully joined room " + msg["room"] + " with ID " + myId);
                                 if(!subscriber_mode)
-                                    janusUtil.publishOwnFeed({useAudio:true});
+                                    janusUtil.publishOwnFeed({useAudio:true, useVideo:true});
                                 
                                 // Any new feed to attach to?
                                 if(msg["publishers"]) {
@@ -196,7 +197,6 @@ function initializeJanus() {
                                 }
                             }
                         }
-                        console.log("FEEDS - ", feeds);
                         if(jsep) {
                             Janus.debug("Handling SDP as well...", jsep);
                             console.log("Handling SDP as well...", jsep);
@@ -254,12 +254,31 @@ function initializeJanus() {
 
     }});
 };
-
 function documentReady(){
     document.querySelector(".meeting-actions #mute").addEventListener("click",() => {
         janusUtil.toggleMute();
     });
     document.querySelector(".meeting-actions #unpublish").addEventListener("click",() => {
         janusUtil.togglePublish();
+    });
+    document.querySelector(".meeting-actions #camera").addEventListener("click",() => {
+        /**
+         * we can create new offer with publishOwnFeed()
+         * janusUtil.publishOwnFeed({useAudio: true, useVideo: false})
+         */
+        const successCallback = () => {
+            janusUtil.mutateLocalStream(useCamera);
+            const toggleCameraEl = document.getElementById("camera");
+            toggleCameraEl.querySelector("span").textContent = useCamera ? "Turn off camera" : "Turn on camera";
+		    toggleCameraEl.querySelector("iconify-icon").setAttribute("icon", useCamera ? "foundation:video" : "mdi:video-off");
+        }
+
+        const errorCallback = (err) => {
+            console.log("error while changing the camera state", err);
+        }
+        useCamera = !useCamera;
+        const request = { request: "configure", video: useCamera };
+        janusUtil.sfuVideoRoom.send({ message: request, success: successCallback, error: errorCallback });
+        
     });
 }
