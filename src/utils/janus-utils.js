@@ -1,4 +1,5 @@
 import Janus from "../js/janus.js";
+import { createDummyTrack } from "./helpers.js";
 
 class JanusUtil {
 	constructor(payload, sfuVideoRoom, janus){
@@ -95,6 +96,13 @@ class JanusUtil {
 		// Publish our stream
 		const { sfuVideoRoom, doDtx, vcodec, doSimulcast, doSvc, acodec } = this;
 		const { useAudio, useVideo } = payload;
+
+		//making some changes on icons based on camera and microphone
+		//TODO: get constrains inside of janus-util class
+		const cameraIcon = document.getElementById("camera");
+		const muteIcon = document.getElementById("mute");
+		cameraIcon.querySelector("iconify-icon").setAttribute("icon", useVideo ? "foundation:video" : "mdi:video-off");
+		muteIcon.querySelector("iconify-icon").setAttribute("icon", useAudio ? "octicon:unmute-16" : "mdi:volume-off");
 
 		sfuVideoRoom.createOffer(
 			{
@@ -265,7 +273,7 @@ class JanusUtil {
 							 * let videoElement = document.querySelector(`.participant#rf-${remoteFeed.rfid} video`);
 							 */
 							if(stream.getVideoTracks().length === 0){
-								stream.addTrack(self.createDummyTrack());
+								stream.addTrack(createDummyTrack());
 							}else{
 								let tracks = Object.values(stream.getVideoTracks());
 								//alternatively we can use track => track instanceof CanvasCaptureMediaStreamTrack
@@ -420,46 +428,6 @@ class JanusUtil {
 		.setAttribute("icon", this.isOurStreamPublished ? "material-symbols:publish" : "material-symbols:unpublished");
 	}
 
-	createDummyTrack(){
-		let width = 640;
-		let height = 480;
-		const canvas = document.createElement('canvas');
-		canvas.width = width;
-		canvas.height = height;
-	
-		const ctx = canvas.getContext('2d');
-		ctx.fillStyle = "black";
-		ctx.fillRect(0, 0, width, height);
-
-		const img = new Image();
-		img.src = '/img/wizard_cat.png'
-		img.onload = () => {
-			const maxWidth = width;
-			const maxHeight = height;
-			let ImgWidth = img.width;
-			let ImgHeight = img.height;
-	
-			if (width > maxWidth || height > maxHeight) {
-				const aspectRatio = width / height;
-	
-				if (ImgWidth > maxWidth) {
-					ImgWidth = maxWidth;
-					ImgHeight = ImgWidth / aspectRatio;
-				}
-				if (ImgHeight > maxHeight) {
-					ImgHeight = maxHeight;
-					ImgWidth = ImgHeight * aspectRatio;
-				}
-			}
-			ctx.drawImage(img, ((canvas.width / 2) - (ImgWidth / 2)), ((canvas.height / 2) - (ImgHeight / 2)), ImgWidth, ImgHeight);
-		}
-	
-		const stream = canvas.captureStream();
-		let track = stream.getVideoTracks()[0];
-		track.dummy = true;
-		return track;
-	}
-
 	mutateLocalStream(useVideo){
 		const self = this;
 		let localVideoEl = document.getElementById("local-video");
@@ -472,7 +440,7 @@ class JanusUtil {
 				localVideoEl.srcObject.addTrack(track);
 			});
 		} else {
-			localVideoEl.srcObject.addTrack(self.createDummyTrack());
+			localVideoEl.srcObject.addTrack(createDummyTrack());
 		}
 	}
 }

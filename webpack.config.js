@@ -13,7 +13,10 @@ const stylesHandler = isProduction
   : "style-loader";
 
 const config = {
-  entry: "./src/app.js",
+  entry: {
+    app: "./src/app.js",
+    lobby: "./src/lobby.js"
+  },
   output: {
     path: path.resolve(__dirname, "dist"),
   },
@@ -24,8 +27,14 @@ const config = {
   plugins: [
     new HtmlWebpackPlugin({
       template: "index.html",
+      filename: "index.html",
+      chunks: ['app']
     }),
-
+    new HtmlWebpackPlugin({
+      template: "lobby.html",
+      filename: "lobby.html",
+      chunks: ['lobby']
+    }),
     // Add your plugins here
     // Learn more about plugins from https://webpack.js.org/configuration/plugins/
   ],
