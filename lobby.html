@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/svg+xml" href="/img/favicon.svg">
+    <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
+    <title>Lobby</title>
+  </head>
+
+  <body>
+    <div class="lobby">
+      <div class="preview">
+        <video id="local-video" autoplay="autoplay" muted="muted"></video>
+        <div class="actions">
+          <button id="mute" class="btn">
+            <iconify-icon icon="octicon:unmute-24"></iconify-icon>
+          </button>
+          <button id="camera" class="btn">
+            <iconify-icon icon="ic:baseline-camera-alt"></iconify-icon>
+          </button>
+        </div>
+      </div>
+      <div class="meeting-settings">
+        <form id="settings-form">
+          <div class="input-field">
+            <input placeholder="username" name="username" required="required" type="text" class="validate">
+          </div>
+          <div class="input-field">
+            <input type="number" placeholder="room" name="room" required="required" class="validate">
+          </div>
+          <div class="options">
+            <div class="input-field">
+              <input id="simulcast" type="checkbox" name="simulcast"/>
+              <label for="simulcast">simulcast</label>
+            </div>
+            <div class="input-field">
+              <input id="svc" type="checkbox" name="svc"/>
+              <label for="svc">svc</label>
+            </div>
+            <div class="input-field">
+              <input id="acodec" type="checkbox" name="acodec"/>
+              <label for="acodec">acodec</label>
+            </div>
+            <div class="input-field">
+              <input id="vcodec" type="checkbox" name="vcodec"/>
+              <label for="vcodec">vcodec</label>
+            </div>
+            <div class="input-field">
+              <input id="dtx" type="checkbox" name="dtx"/>
+              <label for="dtx">dtx</label>
+            </div>
+            <div class="input-field">
+              <input id="subscriber_mode" type="checkbox" name="subscriber_mode"/>
+              <label for="subscriber_mode">subscriber mode</label>
+            </div>
+            <div class="input-field">
+              <input id="use_msid" type="checkbox" name="use_msid"/>
+              <label for="use_msid">msid</label>
+            </div>
+          </div>
+          <button class="btn" type="submit">GET STARTED</button>
+        </form>
+      </div>
+    </div>
+  </body>
+
+</html>

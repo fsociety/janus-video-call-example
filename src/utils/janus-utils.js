@@ -1,4 +1,5 @@
 import Janus from "../js/janus.js";
+import { createDummyTrack, toggleIcons } from "./helpers.js";
 
 class JanusUtil {
 	constructor(payload, sfuVideoRoom, janus){
@@ -12,6 +13,7 @@ class JanusUtil {
 		this.subscriber_mode = payload.subscriber_mode;
 		this.use_msid = payload.use_msid;
 		this.opaqueId = payload.opaqueId;
+		this.constraints = payload.constraints;
 		this.sfuVideoRoom = sfuVideoRoom;
 		this.janus = janus;
 		this.bitrateTimer = {};
@@ -93,13 +95,17 @@ class JanusUtil {
 	 */
 	publishOwnFeed(payload) {
 		// Publish our stream
-		const { sfuVideoRoom, doDtx, vcodec, doSimulcast, doSvc, acodec } = this;
-		const { useAudio, useVideo } = payload;
+		const { sfuVideoRoom, doDtx, vcodec, doSimulcast, doSvc, acodec, mutateLocalStream, constraints } = this;
+		const { audio: useAudio, video: useVideo } = constraints;
+		//const { } = payload;
+
+		//making some changes on icons based on camera and microphone
+		toggleIcons({...constraints});
 
 		sfuVideoRoom.createOffer(
 			{
 				// Add data:true here if you want to publish datachannels as well
-				media: { audioRecv: false, videoRecv: false,  audioSend: useAudio, videoSend: useVideo },
+				media: { audioRecv: false, videoRecv: false,  audioSend: true, videoSend: true },
 				simulcast: doSimulcast,
 				customizeSdp: function(jsep) {
 					// If DTX is enabled, munge the SDP
@@ -109,8 +115,9 @@ class JanusUtil {
 					}
 				},
 				success: function(jsep) {
-					Janus.debug("Got publisher SDP!", jsep);
+					Janus.log("Got publisher SDP!", jsep);
 					let publish = { request: "configure", audio: useAudio, video: useVideo };
+					if(!useVideo) mutateLocalStream(false);
 					// You can force a specific codec to use when publishing by using the
 					// audiocodec and videocodec properties, for instance:
 					// 		publish["audiocodec"] = "opus"
@@ -245,12 +252,12 @@ class JanusUtil {
 						}
 					},
 					iceState: function(state) {
-						Janus.log("ICE state of this WebRTC PeerConnection (feed #" + remoteFeed.rfindex + ") changed to " + state);
-						console.log("ICE state of this WebRTC PeerConnection (feed #" + remoteFeed.rfindex + ") changed to " + state);
+						Janus.log("ICE state of this WebRTC PeerConnection (feed #" + remoteFeed.rfid + ") changed to " + state);
+						console.log("ICE state of this WebRTC PeerConnection (feed #" + remoteFeed.rfid + ") changed to " + state);
 					},
 					webrtcState: function(on) {
-						Janus.log("Janus says this WebRTC PeerConnection (feed #" + remoteFeed.rfindex + ") is " + (on ? "up" : "down") + " now");
-						console.log("Janus says this WebRTC PeerConnection (feed #" + remoteFeed.rfindex + ") is " + (on ? "up" : "down") + " now");
+						Janus.log("Janus says this WebRTC PeerConnection (feed #" + remoteFeed.rfid + ") is " + (on ? "up" : "down") + " now");
+						console.log("Janus says this WebRTC PeerConnection (feed #" + remoteFeed.rfid + ") is " + (on ? "up" : "down") + " now");
 					},
 					onlocalstream: function(stream) {
 						// The subscriber stream is recvonly, we don't expect anything here
@@ -264,14 +271,15 @@ class JanusUtil {
 							 * we can use videoElement.srcObject instead of stream
 							 * let videoElement = document.querySelector(`.participant#rf-${remoteFeed.rfid} video`);
 							 */
+							/*
 							if(stream.getVideoTracks().length === 0){
-								stream.addTrack(self.createDummyTrack());
+								stream.addTrack(createDummyTrack("/img/no-video.png"));
 							}else{
 								let tracks = Object.values(stream.getVideoTracks());
 								//alternatively we can use track => track instanceof CanvasCaptureMediaStreamTrack
 								let canvasTrack = tracks.find(track => track.dummy);
 								if(canvasTrack) stream.removeTrack(canvasTrack);
-							}
+							}*/
 							return;
 						};
 
@@ -315,7 +323,7 @@ class JanusUtil {
 						//clear bitrate and curres timer
 						if(self.bitrateTimer[remoteFeed.rfid])
 							clearInterval(self.bitrateTimer[remoteFeed.rfid]);
-						delete self.bitrateTimer[remoteFeed.rfindex];
+						delete self.bitrateTimer[remoteFeed.rfid];
 						//remove remote video
 						if(document.querySelector(`.participant#rf-${remoteFeed.rfid}`)){
 							document.querySelector(`.participant#rf-${remoteFeed.rfid}`).remove();
@@ -385,16 +393,20 @@ class JanusUtil {
 
 	toggleMute(){
 		const muteEl = document.querySelector(".meeting-actions #mute");
-		let muted = this.sfuVideoRoom.isAudioMuted();
-		Janus.log((muted ? "Unmuting" : "Muting") + " local stream...");
-		if(muted)
-			this.sfuVideoRoom.unmuteAudio();
-		else
-			this.sfuVideoRoom.muteAudio();
-		muted = this.sfuVideoRoom.isAudioMuted();
-		
-		muteEl.querySelector("span").textContent = muted ? "unmute" : "Mute";
-		muteEl.querySelector("iconify-icon").setAttribute("icon", muted ? "mdi:volume-off" : "octicon:unmute-16");
+		Janus.log((this.constraints.audio ? "Unmuting" : "Muting") + " local stream...");
+		this.constraints.audio = !this.constraints.audio;
+
+		const successCallback = () => {
+			muteEl.querySelector("span").textContent = this.constraints.audio ? "Mute" : "unmute";
+			muteEl.querySelector("iconify-icon").setAttribute("icon", this.constraints.audio ? "octicon:unmute-16" : "mdi:volume-off");
+		}
+
+		const errorCallback = (err) => {
+			console.log("error while changing the audio state", err);
+		}
+
+		const request = { request: "configure", audio: this.constraints.audio };
+        this.sfuVideoRoom.send({ message: request, success: successCallback, error: errorCallback });
 	}
 
 	togglePublish() {
@@ -420,46 +432,6 @@ class JanusUtil {
 		.setAttribute("icon", this.isOurStreamPublished ? "material-symbols:publish" : "material-symbols:unpublished");
 	}
 
-	createDummyTrack(){
-		let width = 640;
-		let height = 480;
-		const canvas = document.createElement('canvas');
-		canvas.width = width;
-		canvas.height = height;
-	
-		const ctx = canvas.getContext('2d');
-		ctx.fillStyle = "black";
-		ctx.fillRect(0, 0, width, height);
-
-		const img = new Image();
-		img.src = '/img/wizard_cat.png'
-		img.onload = () => {
-			const maxWidth = width;
-			const maxHeight = height;
-			let ImgWidth = img.width;
-			let ImgHeight = img.height;
-	
-			if (width > maxWidth || height > maxHeight) {
-				const aspectRatio = width / height;
-	
-				if (ImgWidth > maxWidth) {
-					ImgWidth = maxWidth;
-					ImgHeight = ImgWidth / aspectRatio;
-				}
-				if (ImgHeight > maxHeight) {
-					ImgHeight = maxHeight;
-					ImgWidth = ImgHeight * aspectRatio;
-				}
-			}
-			ctx.drawImage(img, ((canvas.width / 2) - (ImgWidth / 2)), ((canvas.height / 2) - (ImgHeight / 2)), ImgWidth, ImgHeight);
-		}
-	
-		const stream = canvas.captureStream();
-		let track = stream.getVideoTracks()[0];
-		track.dummy = true;
-		return track;
-	}
-
 	mutateLocalStream(useVideo){
 		const self = this;
 		let localVideoEl = document.getElementById("local-video");
@@ -472,7 +444,7 @@ class JanusUtil {
 				localVideoEl.srcObject.addTrack(track);
 			});
 		} else {
-			localVideoEl.srcObject.addTrack(self.createDummyTrack());
+			localVideoEl.srcObject.addTrack(createDummyTrack());
 		}
 	}
 }

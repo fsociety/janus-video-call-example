@@ -3,21 +3,25 @@ import './js/script.js';
 import Settings from './js/settings.js';
 import Janus from './js/janus.js';
 import JanusUtil from './utils/janus-utils.js';
+import { createDummyTrack } from './utils/helpers.js';
 
+if(!sessionStorage.getItem("room")){
+    window.location.href = "/lobby.html";
+}
 let currentUrl = new URL(window.location.href);
-let room = Number(currentUrl.searchParams.get("room"));
+let room = Number(sessionStorage.getItem("room"));
 let janus,sfuVideoRoom,myId,myStream,myPvtid;
 let feeds = [];
-let useCamera = true;
-let username = "user-"+Janus.randomString(12);
+let constraints = JSON.parse(sessionStorage.getItem("constraints"));
+let username = sessionStorage.getItem("username") || "user-"+Janus.randomString(12);
 const opaqueId = "videoroom-"+Janus.randomString(12);
-const doSimulcast = currentUrl.searchParams.get("simulcast");
-const doSvc = currentUrl.searchParams.get("svc");
-const acodec = currentUrl.searchParams.get("acodec");
-const vcodec = currentUrl.searchParams.get("vcodec");
-const doDtx = currentUrl.searchParams.get("dtx");
-const subscriber_mode = currentUrl.searchParams.get("subscriber-mode");
-const use_msid = currentUrl.searchParams.get("msid");
+const doSimulcast = sessionStorage.getItem("simulcast");
+const doSvc = sessionStorage.getItem("svc")
+const acodec = sessionStorage.getItem("acodec")
+const vcodec = sessionStorage.getItem("vcodec")
+const doDtx = sessionStorage.getItem("dtx")
+const subscriber_mode = sessionStorage.getItem("subscriber-mode")
+const use_msid = sessionStorage.getItem("msid")
 
 const janusUtil = new JanusUtil({
     room,
@@ -26,11 +30,11 @@ const janusUtil = new JanusUtil({
     doSvc,
     acodec,
     vcodec,
-    vcodec,
     doDtx,
     subscriber_mode,
     use_msid,
-    opaqueId
+    opaqueId,
+    constraints
 });
 
 document.addEventListener("DOMContentLoaded",() => {
@@ -120,7 +124,7 @@ function initializeJanus() {
                                 myPvtid = msg["private_id"];
                                 Janus.log("Successfully joined room " + msg["room"] + " with ID " + myId);
                                 if(!subscriber_mode)
-                                    janusUtil.publishOwnFeed({useAudio:true, useVideo:true});
+                                    janusUtil.publishOwnFeed();
                                 
                                 // Any new feed to attach to?
                                 if(msg["publishers"]) {
@@ -248,7 +252,10 @@ function initializeJanus() {
             },
             destroyed: () => {
                 console.log("destroyed");
-                //window.location.reload();
+                //clear all the data
+                sessionStorage.clear();
+                //and redirect to lobby page
+                window.location.href = "/lobby.html"
             }
         });
 
@@ -266,19 +273,35 @@ function documentReady(){
          * we can create new offer with publishOwnFeed()
          * janusUtil.publishOwnFeed({useAudio: true, useVideo: false})
          */
+        constraints.video = !constraints.video;
         const successCallback = () => {
-            janusUtil.mutateLocalStream(useCamera);
+            janusUtil.mutateLocalStream(constraints.video);
             const toggleCameraEl = document.getElementById("camera");
-            toggleCameraEl.querySelector("span").textContent = useCamera ? "Turn off camera" : "Turn on camera";
-		    toggleCameraEl.querySelector("iconify-icon").setAttribute("icon", useCamera ? "foundation:video" : "mdi:video-off");
+            toggleCameraEl.querySelector("span").textContent = constraints.video ? "Turn off camera" : "Turn on camera";
+		    toggleCameraEl.querySelector("iconify-icon").setAttribute("icon", constraints.video ? "foundation:video" : "mdi:video-off");
+            sessionStorage.setItem("constraints", JSON.stringify(constraints))
         }
 
         const errorCallback = (err) => {
             console.log("error while changing the camera state", err);
         }
-        useCamera = !useCamera;
-        const request = { request: "configure", video: useCamera };
+        const request = { request: "configure", video: constraints.video };
         janusUtil.sfuVideoRoom.send({ message: request, success: successCallback, error: errorCallback });
         
+    });
+
+    //video muted
+    document.addEventListener("remotevideomuted",(e) => {
+        const { stream } = e.detail;
+        stream.addTrack(createDummyTrack());
+    });
+    
+    //video unmuted
+    document.addEventListener("remotevideounmuted",(e) => {
+        const { stream } = e.detail;
+        let tracks = Object.values(stream.getVideoTracks());
+        //alternatively we can use track => track instanceof CanvasCaptureMediaStreamTrack
+        let dummyTrack = tracks.find(track => track.dummy);
+        if(dummyTrack) stream.removeTrack(dummyTrack);
     });
 }
