@@ -3,6 +3,7 @@ import './js/script.js';
 import Settings from './js/settings.js';
 import Janus from './js/janus.js';
 import JanusUtil from './utils/janus-utils.js';
+import { createDummyTrack } from './utils/helpers.js';
 
 if(!sessionStorage.getItem("room")){
     window.location.href = "/lobby.html";
@@ -32,7 +33,8 @@ const janusUtil = new JanusUtil({
     doDtx,
     subscriber_mode,
     use_msid,
-    opaqueId
+    opaqueId,
+    constraints
 });
 
 document.addEventListener("DOMContentLoaded",() => {
@@ -122,7 +124,7 @@ function initializeJanus() {
                                 myPvtid = msg["private_id"];
                                 Janus.log("Successfully joined room " + msg["room"] + " with ID " + myId);
                                 if(!subscriber_mode)
-                                    janusUtil.publishOwnFeed({useAudio:constraints.audio, useVideo:constraints.video});
+                                    janusUtil.publishOwnFeed();
                                 
                                 // Any new feed to attach to?
                                 if(msg["publishers"]) {
@@ -286,5 +288,20 @@ function documentReady(){
         const request = { request: "configure", video: constraints.video };
         janusUtil.sfuVideoRoom.send({ message: request, success: successCallback, error: errorCallback });
         
+    });
+
+    //video muted
+    document.addEventListener("remotevideomuted",(e) => {
+        const { stream } = e.detail;
+        stream.addTrack(createDummyTrack());
+    });
+    
+    //video unmuted
+    document.addEventListener("remotevideounmuted",(e) => {
+        const { stream } = e.detail;
+        let tracks = Object.values(stream.getVideoTracks());
+        //alternatively we can use track => track instanceof CanvasCaptureMediaStreamTrack
+        let dummyTrack = tracks.find(track => track.dummy);
+        if(dummyTrack) stream.removeTrack(dummyTrack);
     });
 }

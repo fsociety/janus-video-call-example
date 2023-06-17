@@ -1,4 +1,5 @@
 import adapter from "webrtc-adapter";
+import { createDummyTrack } from "../utils/helpers.js";
 /*
 	The MIT License (MIT)
 
@@ -1927,6 +1928,8 @@ function Janus(gatewayCallbacks) {
 							if (config.remoteStream) {
 								config.remoteStream.removeTrack(ev.target);
 								pluginHandle.onremotestream(config.remoteStream);
+								let newEvent = new CustomEvent("remotevideomuted", { detail: { stream: config.remoteStream} });
+								document.dispatchEvent(newEvent);
 							}
 							trackMutedTimeoutId = null;
 						// Chrome seems to raise mute events only at multiples of 834ms;
@@ -1943,6 +1946,8 @@ function Janus(gatewayCallbacks) {
 						try {
 							config.remoteStream.addTrack(ev.target);
 							pluginHandle.onremotestream(config.remoteStream);
+							let newEvent = new CustomEvent("remotevideounmuted", { detail: { stream: config.remoteStream} });
+							document.dispatchEvent(newEvent);
 						} catch(e) {
 							Janus.error(e);
 						}

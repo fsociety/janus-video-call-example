@@ -37,3 +37,17 @@ export function createDummyTrack(image){
     track.dummy = true;
     return track;
 }
+
+export function toggleIcons(options){
+    const {video,audio} = options;
+    if(video !== undefined){
+        const cameraIcon = document.getElementById("camera");
+		cameraIcon.querySelector("span").textContent = video ? "Turn off camera" : "Turn on camera";
+		cameraIcon.querySelector("iconify-icon").setAttribute("icon", video ? "foundation:video" : "mdi:video-off");
+    }
+    if(audio !== undefined){
+        const muteIcon = document.getElementById("mute");
+		muteIcon.querySelector("span").textContent = audio ? "Mute" : "unmute";
+		muteIcon.querySelector("iconify-icon").setAttribute("icon", audio ? "octicon:unmute-16" : "mdi:volume-off");
+    }
+}
