@@ -4,6 +4,7 @@ import Settings from './js/settings.js';
 import Janus from './js/janus.js';
 import JanusUtil from './utils/janus-utils.js';
 import { createDummyTrack } from './utils/helpers.js';
+import { io } from 'socket.io-client';
 
 if(!sessionStorage.getItem("room")){
     window.location.href = "/lobby.html";
@@ -22,6 +23,7 @@ const vcodec = sessionStorage.getItem("vcodec")
 const doDtx = sessionStorage.getItem("dtx")
 const subscriber_mode = sessionStorage.getItem("subscriber-mode")
 const use_msid = sessionStorage.getItem("msid")
+const socket = io("localhost:3000");
 
 const janusUtil = new JanusUtil({
     room,
