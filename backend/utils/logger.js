@@ -13,7 +13,7 @@ const logger = winston.createLogger({
                 msg = `${date} ${info.level}: ${info.message}`;
                 return restOfObject;
             })(info)
-            return `${msg}, ${JSON.stringify(rest, null, 2)}`;
+            return Object.keys(rest).length ? `${msg}, ${JSON.stringify(rest, null, 2)}` : msg;
         })
       ),
     transports: [new winston.transports.Console({})],
