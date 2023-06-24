@@ -9,7 +9,7 @@ import { io } from 'socket.io-client';
 if(!sessionStorage.getItem("room")){
     window.location.href = "/lobby.html";
 }
-let currentUrl = new URL(window.location.href);
+
 let room = Number(sessionStorage.getItem("room"));
 let janus,sfuVideoRoom,myId,myStream,myPvtid;
 let feeds = [];
@@ -23,7 +23,11 @@ const vcodec = sessionStorage.getItem("vcodec")
 const doDtx = sessionStorage.getItem("dtx")
 const subscriber_mode = sessionStorage.getItem("subscriber-mode")
 const use_msid = sessionStorage.getItem("msid")
-const socket = io("localhost:3000");
+const socket = io("localhost:3000",{
+    query:{
+        room: room
+    }   
+});
 
 const janusUtil = new JanusUtil({
     room,
@@ -263,6 +267,11 @@ function initializeJanus() {
 
     }});
 };
+
+socket.on("connected",() => {
+    console.info("Socket: successfuly joined room:"+room);
+});
+
 function documentReady(){
     document.querySelector(".meeting-actions #mute").addEventListener("click",() => {
         janusUtil.toggleMute();

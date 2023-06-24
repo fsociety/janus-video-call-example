@@ -6,11 +6,14 @@ const logger = winston.createLogger({
         winston.format.colorize(),
         winston.format.json(),
         winston.format.printf(info => {
-            let message = `${info.timestamp} ${info.level}: `;
-            delete info.timestamp;
-            delete info.level;
-            message += JSON.stringify(info, null, 4);
-            return message;
+            const time = new Date(info.timestamp);
+            const date = `${time.getDate()}-${time.getMonth() + 1}-${time.getFullYear()} - ${time.getHours()}:${time.getMinutes()}:${time.getSeconds()}`
+            let msg;
+            const rest = (({ level, timestamp, message, ...restOfObject }) => {
+                msg = `${date} ${info.level}: ${info.message}`;
+                return restOfObject;
+            })(info)
+            return `${msg}, ${JSON.stringify(rest, null, 2)}`;
         })
       ),
     transports: [new winston.transports.Console({})],
