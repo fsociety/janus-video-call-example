@@ -4,11 +4,12 @@ import Settings from './js/settings.js';
 import Janus from './js/janus.js';
 import JanusUtil from './utils/janus-utils.js';
 import { createDummyTrack } from './utils/helpers.js';
+import SocketOperations from './services/socket-operations.js';
 
 if(!sessionStorage.getItem("room")){
     window.location.href = "/lobby.html";
 }
-let currentUrl = new URL(window.location.href);
+
 let room = Number(sessionStorage.getItem("room"));
 let janus,sfuVideoRoom,myId,myStream,myPvtid;
 let feeds = [];
@@ -22,6 +23,10 @@ const vcodec = sessionStorage.getItem("vcodec")
 const doDtx = sessionStorage.getItem("dtx")
 const subscriber_mode = sessionStorage.getItem("subscriber-mode")
 const use_msid = sessionStorage.getItem("msid")
+const socketOperations = new SocketOperations({
+    room:room
+});
+socketOperations.initializeListeners();
 
 const janusUtil = new JanusUtil({
     room,
@@ -261,6 +266,7 @@ function initializeJanus() {
 
     }});
 };
+
 function documentReady(){
     document.querySelector(".meeting-actions #mute").addEventListener("click",() => {
         janusUtil.toggleMute();

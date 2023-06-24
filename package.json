@@ -11,7 +11,8 @@
     "build:dev": "webpack --mode=development",
     "build:prod": "webpack --mode=production --node-env=production",
     "watch": "webpack --watch",
-    "serve": "webpack serve"
+    "serve": "webpack serve",
+    "start": "concurrently -n client,backend -c \"bgBlue.bold,bgMagenta.bold\" \"yarn serve\" \"yarn --cwd ./backend/ start\""
   },
   "devDependencies": {
     "@babel/core": "^7.21.8",
@@ -35,6 +36,8 @@
   },
   "description": "janus video room",
   "dependencies": {
+    "concurrently": "^8.2.0",
+    "socket.io-client": "^4.6.2",
     "webrtc-adapter": "^8.2.2"
   }
 }
