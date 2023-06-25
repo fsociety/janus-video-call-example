@@ -392,21 +392,24 @@ class JanusUtil {
 	}
 
 	toggleMute(){
-		const muteEl = document.querySelector(".meeting-actions #mute");
-		Janus.log((this.constraints.audio ? "Unmuting" : "Muting") + " local stream...");
-		this.constraints.audio = !this.constraints.audio;
+		return new Promise((resolve,reject) => {
+			const muteEl = document.querySelector(".meeting-actions #mute");
+			Janus.log((this.constraints.audio ? "Unmuting" : "Muting") + " local stream...");
+			this.constraints.audio = !this.constraints.audio;
 
-		const successCallback = () => {
-			muteEl.querySelector("span").textContent = this.constraints.audio ? "Mute" : "unmute";
-			muteEl.querySelector("iconify-icon").setAttribute("icon", this.constraints.audio ? "octicon:unmute-16" : "mdi:volume-off");
-		}
+			const successCallback = () => {
+				muteEl.querySelector("span").textContent = this.constraints.audio ? "Mute" : "unmute";
+				muteEl.querySelector("iconify-icon").setAttribute("icon", this.constraints.audio ? "octicon:unmute-16" : "mdi:volume-off");
+				resolve(this.constraints);
+			}
 
-		const errorCallback = (err) => {
-			console.log("error while changing the audio state", err);
-		}
+			const errorCallback = (err) => {
+				reject(err)
+			}
 
-		const request = { request: "configure", audio: this.constraints.audio };
-        this.sfuVideoRoom.send({ message: request, success: successCallback, error: errorCallback });
+			const request = { request: "configure", audio: this.constraints.audio };
+			this.sfuVideoRoom.send({ message: request, success: successCallback, error: errorCallback });
+		})
 	}
 
 	togglePublish() {

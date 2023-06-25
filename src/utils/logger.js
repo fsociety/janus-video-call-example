@@ -1,12 +1,16 @@
 const logger = {
     info(...args){
         args.forEach(arg => {
-            console.log(typeof arg === "object" ? arg : `%c ${arg}`, 'background: #transparent; color: #45bab1; font-style: italic')
+            typeof arg === "string" ? 
+            console.log(`%c ${arg}`, 'background: #transparent; color: #45bab1; font-style: italic') : 
+            console.log(arg);
         })
     },
     error(...args){
         args.forEach(arg => {
-            console.error(typeof arg === "object" ? arg : `%c ${arg}`, 'background: transparent; color: #FFD2D2')
+            typeof arg === "string" ? 
+            console.error(`%c ${arg}`, 'background: transparent; color: #FFD2D2') :
+            console.error(arg);
         })
     }
 }
