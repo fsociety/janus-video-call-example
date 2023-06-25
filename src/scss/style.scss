@@ -38,6 +38,10 @@ body{
             border-radius: 50%;
             aspect-ratio: 1;
             border: 12px solid #727272;
+            margin: auto;
+            .icon.lg-description span{
+                max-width: 80%;
+            }
         }
         img,video {
             width: 100%;

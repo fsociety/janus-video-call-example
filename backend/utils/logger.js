@@ -10,7 +10,7 @@ const logger = winston.createLogger({
             const date = `${time.getDate()}-${time.getMonth() + 1}-${time.getFullYear()} - ${time.getHours()}:${time.getMinutes()}:${time.getSeconds()}`
             let msg;
             const rest = (({ level, timestamp, message, ...restOfObject }) => {
-                msg = `${date} ${info.level}: ${info.message}`;
+                msg = `${date} ${level}: ${typeof message === "string" ? message : JSON.stringify(message,null,2)}`;
                 return restOfObject;
             })(info)
             return Object.keys(rest).length ? `${msg}, ${JSON.stringify(rest, null, 2)}` : msg;

@@ -53,11 +53,21 @@ app.use(function(err, req, res, next) {
 });
 
 io.on('connection', (socket) => {
-  logger.info("connected to room", {
-    room: socket.handshake.query.room,
-    socket_id: socket.id
+  const room = socket.handshake.query.room;
+  if(room){
+    socket.join(room);
+    logger.info("connected to room", {
+      room: room,
+      socket_id: socket.id
+    });
+    socket.emit("connected");
+  }else{
+    socket.disconnect();
+  }
+
+  socket.on("onchange_constraints",(options) => {
+    socket.to(room).emit("onchange_constraints",options)
   });
-  socket.emit("connected");
 
   socket.on('disconnect', () => {
     console.log('user disconnected');

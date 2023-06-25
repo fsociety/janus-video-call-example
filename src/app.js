@@ -268,8 +268,18 @@ function initializeJanus() {
 };
 
 function documentReady(){
-    document.querySelector(".meeting-actions #mute").addEventListener("click",() => {
-        janusUtil.toggleMute();
+    document.querySelector(".meeting-actions #mute").addEventListener("click",async () => {
+        try {
+            const constraints = await janusUtil.toggleMute();
+            sessionStorage.setItem("constraints", JSON.stringify(constraints))
+            socketOperations.sendConstraintsChangeEvent({
+                rfid: myId,
+                kind: "audio",
+                constraints
+            });
+        } catch (error) {
+            console.error("error while changing the audio state", error);
+        }
     });
     document.querySelector(".meeting-actions #unpublish").addEventListener("click",() => {
         janusUtil.togglePublish();
@@ -286,6 +296,11 @@ function documentReady(){
             toggleCameraEl.querySelector("span").textContent = constraints.video ? "Turn off camera" : "Turn on camera";
 		    toggleCameraEl.querySelector("iconify-icon").setAttribute("icon", constraints.video ? "foundation:video" : "mdi:video-off");
             sessionStorage.setItem("constraints", JSON.stringify(constraints))
+            socketOperations.sendConstraintsChangeEvent({
+                rfid: myId,
+                kind: "video",
+                constraints
+            });
         }
 
         const errorCallback = (err) => {
