@@ -1,5 +1,5 @@
 const appConfig = {
-    socket_url: "localhost:3000"
+    socket_url: "https://socket.video-call.test"
 }
 
 export default appConfig;

@@ -21,8 +21,10 @@ const config = {
     path: path.resolve(__dirname, "dist"),
   },
   devServer: {
-    open: true,
-    host: "localhost",
+    open: false,
+    host: "0.0.0.0",
+    allowedHosts: "all",
+    webSocketServer: false
   },
   plugins: [
     new HtmlWebpackPlugin({

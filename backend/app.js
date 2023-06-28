@@ -17,7 +17,7 @@ var app = express();
  */
 var server = http.createServer(app);
 const io = new Server(server, {cors: {
-  origin: process.env.CORS_ORIGIN
+  origin: process.env.APP_URL
 }});
 
 // view engine setup
@@ -25,7 +25,7 @@ app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'pug');
 
 app.use(cors({
-  origin: process.env.CORS_ORIGIN
+  origin: process.env.APP_URL
 }));
 app.use(morgan('dev'));
 app.use(express.json());
