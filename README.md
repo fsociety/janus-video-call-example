@@ -7,7 +7,7 @@ This is a video call example using Janus Legacy. It utilizes the Janus Video Roo
 To run this application, you'll need to have the following installed:
 
 - Docker
-- npm/yarn
+- npm/yarn (It's not mandatory if you just want to view the app.)
 
 ## Getting Started
 
@@ -17,27 +17,23 @@ To run this application, you'll need to have the following installed:
   git clone git@github.com:fsociety/janus-video-call-example.git
   ```
 
-2. Navigate to the root directory and install dependencies using yarn:
-  ```shell
-  cd janus-video-call-example
-
-  yarn
-  ```
-
-3. Update Janus settings:
-The Janus configuration files are located in the janus directory. Modify the configuration files to match your requirements.
-
-4. Start the janus container using Docker Compose:
-  ```shell
-  docker-compose up
-  ```
+2. Optionally, you can choose to run the project in either "dev" or "prod" mode. By default, it runs in "dev" mode.
   
-5. Start the application using yarn/npm:
-  ```shell
-  yarn serve
-  ```
+3. Configure the host settings on your machine based on your operating system:
+- For Linux and macOS users, open a terminal and execute the following command to edit the hosts file:
+```shell
+  sudo nano /etc/hosts
+```
+- For Windows users, open your text editor as an administrator and open the following file:
+```
+c:\Windows\System32\Drivers\etc\hosts
+```
+Add the following lines at the end of the file:
+```
+127.0.0.1 video-call.test socket.video-call.test api.video-call.test janus.video-call.test
+```
   
-6. Open your web browser and access the application at http://localhost:8080/?room=room-id (replace room-id with the appropriate room id).
+7. Finally, open your web browser and access the application at https://video-call.test.
 
 ## Usage
 Once the application is running, you can perform the following steps:
