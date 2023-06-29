@@ -1,17 +1,44 @@
-version: '2.1'
+version: '3'
 services:
   janus-gateway:
     image: 'canyan/janus-gateway:0.10.7'
     command: ["/usr/local/bin/janus", "-F", "/usr/local/etc/janus"]
-    ports:
-      - "8088:8088"
-      - "8089:8089"
-      - "8889:8889"
-      - "8000:8000"
-      - "7088:7088"
-      - "7089:7089"
+    #ports:
+      #- "8088:8088"
+      #- "8089:8089"
+      #- "7088:7088"
+      #- "7089:7089"
     volumes:
       - "./janus/etc/janus:/usr/local/etc/janus"
       - "./janus/recordings:/opt/janus/share/janus/recordings/binary"
       - "./janus/log/:/usr/local/log/"
-    restart: always
+  
+  app:
+    build:
+      context: ./app
+      args:
+      - APP_WORK_DIR=${APP_WORK_DIR}
+      - ENVIRONMENT=${ENVIRONMENT}
+    volumes:
+      - "./app:${APP_WORK_DIR}"
+
+  backend:
+    build:
+      context: ./backend
+      args:
+      - BACKEND_WORK_DIR=${BACKEND_WORK_DIR}
+    volumes:
+      - "./backend:${BACKEND_WORK_DIR}"
+  
+  nginx:
+    build:
+      context: ./nginx
+      args:
+        - ENVIRONMENT=${ENVIRONMENT}
+    volumes:
+      - ./app:/var/www
+      - ./nginx/logs/:/var/log/nginx
+      - ./nginx/ssl:/etc/nginx/ssl
+    ports:
+      - "80:80"
+      - "443:443"

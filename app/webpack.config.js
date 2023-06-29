@@ -3,6 +3,7 @@ import { fileURLToPath } from 'url';
 import HtmlWebpackPlugin from "html-webpack-plugin";
 import MiniCssExtractPlugin from "mini-css-extract-plugin";
 import WorkboxWebpackPlugin from "workbox-webpack-plugin";
+import CopyWebpackPlugin from 'copy-webpack-plugin';
 
 const isProduction = process.env.NODE_ENV == "production";
 const __filename = fileURLToPath(import.meta.url);
@@ -21,8 +22,10 @@ const config = {
     path: path.resolve(__dirname, "dist"),
   },
   devServer: {
-    open: true,
-    host: "localhost",
+    open: false,
+    host: "0.0.0.0",
+    allowedHosts: "all",
+    webSocketServer: false
   },
   plugins: [
     new HtmlWebpackPlugin({
@@ -70,6 +73,10 @@ export default () => {
     config.plugins.push(new MiniCssExtractPlugin());
 
     config.plugins.push(new WorkboxWebpackPlugin.GenerateSW());
+
+    config.plugins.push(new CopyWebpackPlugin({patterns: [
+      { from: 'public', to: '.' }
+    ]}));
   } else {
     config.mode = "development";
   }

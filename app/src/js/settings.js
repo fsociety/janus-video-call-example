@@ -49,12 +49,13 @@
 // in the presented order. The first working server will be used for
 // the whole session.
 //
-let server;
+let server = "https://janus.video-call.test";
+/*
 if(window.location.protocol === 'http:')
 	server = "http://" + window.location.hostname + ":8088/janus";
 else
 	server = "https://" + window.location.hostname + ":8089/janus";
-
+*/
 // When creating a Janus object, we can also specify which STUN/TURN
 // servers we'd like to use to gather additional candidates. This is
 // done by passing an "iceServers" property when creating the Janus

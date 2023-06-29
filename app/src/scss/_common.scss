@@ -1,6 +1,8 @@
 @import "toastr";
 
-input[type="text"], input[type="number"]{
+input:not([type]),
+input[type="text"],
+input[type="number"]{
     width: 100%;
     height: 50px;
     border-radius: 6px;
