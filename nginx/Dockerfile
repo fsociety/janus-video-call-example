@@ -1,6 +1,10 @@
 FROM nginx:alpine
 
+ARG ENVIRONMENT
+
 COPY nginx.conf /etc/nginx/
+
+COPY ./sites/app.${ENVIRONMENT}.conf /etc/nginx/sites-available/
 
 RUN apk update \
     && apk upgrade \

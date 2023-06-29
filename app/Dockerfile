@@ -1,0 +1,12 @@
+FROM node:20-alpine3.17
+
+ARG APP_WORK_DIR
+ARG ENVIRONMENT
+
+ENV ENVIRONMENT=${ENVIRONMENT}
+
+WORKDIR ${APP_WORK_DIR}
+
+#RUN yarn
+
+CMD [ "/bin/sh", "./bootstrap.sh" ]
