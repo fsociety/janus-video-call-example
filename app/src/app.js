@@ -1,31 +1,30 @@
 import './scss/style.scss';
 import './js/script.js';
+import "./components/chat.js";
+import SharedUtil from './utils/shared-util.js';
 import Settings from './js/settings.js';
 import Janus from './js/janus.js';
 import JanusUtil from './utils/janus-utils.js';
 import { createDummyTrack } from './utils/helpers.js';
-import SocketOperations from './services/socket-operations.js';
 
 if(!sessionStorage.getItem("room")){
     window.location.href = "/lobby.html";
 }
 
-let room = Number(sessionStorage.getItem("room"));
+let room = SharedUtil.params.room;
 let janus,sfuVideoRoom,myId,myStream,myPvtid;
 let feeds = [];
 let constraints = JSON.parse(sessionStorage.getItem("constraints"));
-let username = sessionStorage.getItem("username") || "user-"+Janus.randomString(12);
+let username = SharedUtil.params.username;
 const opaqueId = "videoroom-"+Janus.randomString(12);
 const doSimulcast = sessionStorage.getItem("simulcast");
-const doSvc = sessionStorage.getItem("svc")
-const acodec = sessionStorage.getItem("acodec")
-const vcodec = sessionStorage.getItem("vcodec")
-const doDtx = sessionStorage.getItem("dtx")
-const subscriber_mode = sessionStorage.getItem("subscriber-mode")
-const use_msid = sessionStorage.getItem("msid")
-const socketOperations = new SocketOperations({
-    room:room
-});
+const doSvc = sessionStorage.getItem("svc");
+const acodec = sessionStorage.getItem("acodec");
+const vcodec = sessionStorage.getItem("vcodec");
+const doDtx = sessionStorage.getItem("dtx");
+const subscriber_mode = sessionStorage.getItem("subscriber-mode");
+const use_msid = sessionStorage.getItem("msid");
+const socketOperations = SharedUtil.socketOperations;
 socketOperations.initializeListeners();
 
 const janusUtil = new JanusUtil({
