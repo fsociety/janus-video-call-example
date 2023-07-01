@@ -27,6 +27,7 @@ services:
       context: ./backend
       args:
       - BACKEND_WORK_DIR=${BACKEND_WORK_DIR}
+      - ENVIRONMENT=${ENVIRONMENT}
     volumes:
       - "./backend:${BACKEND_WORK_DIR}"
   

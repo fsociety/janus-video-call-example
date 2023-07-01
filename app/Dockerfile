@@ -7,6 +7,4 @@ ENV ENVIRONMENT=${ENVIRONMENT}
 
 WORKDIR ${APP_WORK_DIR}
 
-#RUN yarn
-
 CMD [ "/bin/sh", "./bootstrap.sh" ]
