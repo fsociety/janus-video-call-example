@@ -54,23 +54,40 @@ app.use(function(err, req, res, next) {
 
 io.on('connection', (socket) => {
   const room = socket.handshake.query.room;
-  if(room){
+  const username = socket.handshake.query.username;
+  if(room && username){
     socket.join(room);
-    logger.info("connected to room", {
+    socket.username = username;
+    const payload = {
       room: room,
-      socket_id: socket.id
-    });
-    socket.emit("connected");
+      socket_id: socket.id,
+      username: socket.username
+    };
+    socket.to(room).emit("connected", payload);
+    logger.info("connected to room", payload);
   }else{
     socket.disconnect();
   }
 
   socket.on("onchange_constraints",(options) => {
-    socket.to(room).emit("onchange_constraints",options)
+    socket.to(room).emit("onchange_constraints",options);
   });
 
+  socket.on("chat_message",(options) => {
+    options.username = socket.username;
+    socket.to(room).emit("chat_messages",options);
+  })
+
+  socket.on("chat_typing_notification", (options) => {
+    options.username = socket.username;
+    socket.to(room).emit("chat_typing_notification", options);
+  })
+
   socket.on('disconnect', () => {
-    console.log('user disconnected');
+    socket.to(room).emit("user_disconnected", {
+      username:socket.username
+    });
+    console.log('user disconnected - ',socket.username);
   });
 });
 

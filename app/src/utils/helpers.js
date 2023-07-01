@@ -51,3 +51,30 @@ export function toggleIcons(options){
 		muteIcon.querySelector("iconify-icon").setAttribute("icon", audio ? "octicon:unmute-16" : "mdi:volume-off");
     }
 }
+
+export function createChatMessageEl (options, lm = false) {
+    const date = new Date();
+    const message = document.createElement("div");
+    const info = document.createElement("strong");
+    const txt = document.createElement("div");
+    const time = document.createElement("div");
+    time.className = "time";
+    time.textContent = `${date.getHours()}:${String(date.getMinutes()).padStart(2, "0")}:${String(date.getSeconds()).padStart(2, "0")}`;
+    txt.className = "txt";
+    info.textContent = options.username;
+    message.className = "message";
+    if(lm) message.classList.add("me");
+    txt.textContent = options.message;
+    message.append(info,txt,time);
+    return message;
+}
+
+export function playNotificationSound(){
+    const chatContainer = document.querySelector(".chat-container");
+    const chatBtn = document.getElementById("chat-btn")
+    if(!chatContainer.classList.contains("active") || document.visibilityState === "hidden"){
+        const audio = new Audio('/notification.mp3');
+        audio.play();
+    }
+    if(!chatContainer.classList.contains("active")) chatBtn.querySelector(".badge.red").classList.add("active");
+}
