@@ -1,9 +1,12 @@
 FROM node:20-alpine3.17
 
 ARG BACKEND_WORK_DIR
+ARG ENVIRONMENT
+
+ENV ENVIRONMENT=${ENVIRONMENT}
 
 WORKDIR ${BACKEND_WORK_DIR}
 
 RUN yarn
 
-CMD [ "yarn", "dev"]
+CMD [ "/bin/sh", "./bootstrap.sh" ]
