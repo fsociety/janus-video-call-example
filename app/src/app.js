@@ -5,7 +5,9 @@ import SharedUtil from './utils/shared-util.js';
 import Settings from './js/settings.js';
 import Janus from './js/janus.js';
 import JanusUtil from './utils/janus-utils.js';
-import { createDummyTrack } from './utils/helpers.js';
+import { createDummyTrack, bytesToSize } from './utils/helpers.js';
+import RecordRTC from 'recordrtc';
+import ChunkService from './services/http/chunk-service.js';
 
 if(!sessionStorage.getItem("room")){
     window.location.href = "/lobby.html";
@@ -16,6 +18,7 @@ let janus,sfuVideoRoom,myId,myStream,myPvtid;
 let feeds = [];
 let constraints = JSON.parse(sessionStorage.getItem("constraints"));
 let username = SharedUtil.params.username;
+let videoRecordStarted = false;
 const opaqueId = "videoroom-"+Janus.randomString(12);
 const doSimulcast = sessionStorage.getItem("simulcast");
 const doSvc = sessionStorage.getItem("svc");
@@ -324,4 +327,53 @@ function documentReady(){
         let dummyTrack = tracks.find(track => track.dummy);
         if(dummyTrack) stream.removeTrack(dummyTrack);
     });
+
+    document.getElementById("record-btn").addEventListener("click", async () => {
+        let stream = await navigator.mediaDevices.getUserMedia({video: true, audio: true});
+        let recorder = new RecordRTC(stream,{
+            type: "video"
+        });
+        
+        recorder.startRecording();
+        setTimeout(() => {
+            recorder.stopRecording(() => {
+                let blob = recorder.getBlob();
+                RecordRTC.invokeSaveAsDialog(blob, "record.webm");
+            })
+        }, 3000);
+        
+        //videoRecordStarted = !videoRecordStarted;
+    })
+}
+
+async function chunkedVideoRecord(){
+    let stream = await navigator.mediaDevices.getUserMedia({video: true, audio: true});
+        let chunkService = new ChunkService();
+        let recorder = new RecordRTC(stream,{
+            type: "video",
+            mimeType: 'video/webm',
+            timeSlice: 2000,
+            ondataavailable: function(blob){
+                ChunkService.sendChunk(blob);
+                chunkService.appendBlobs(blob);
+                let size = 0;
+                let blobs = chunkService.getBlobs();
+                blobs.forEach(function(b) {
+                    size += b.size;
+                });
+
+                console.log('Total blobs: ' + blobs.length + ' (Total size: ' + bytesToSize(size) + ')');
+            }
+        });
+
+        recorder.startRecording();
+        
+        setTimeout(() => {
+            recorder.stopRecording(() => {
+                var blob = new File(blobs, 'video.webm', {
+                    type: 'video/webm'
+                });
+                RecordRTC.invokeSaveAsDialog(blob);
+            })
+        }, 5000);
 }
